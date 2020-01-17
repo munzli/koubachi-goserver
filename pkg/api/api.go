@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -75,8 +76,19 @@ func (api *API) config(c *gin.Context) {
 	// do nothing with body
 	_ = body
 
-	// TODO dynamic
-	response := []byte("current_time=1571731475&transmit_interval=55202&transmit_app_led=1&sensor_app_led=0&day_threshold=10.0&sensor_enabled[1]=0&sensor_enabled[2]=1&sensor_enabled[6]=1&sensor_enabled[7]=1&sensor_enabled[8]=1&sensor_enabled[9]=1&sensor_enabled[10]=1&sensor_enabled[11]=1&sensor_enabled[12]=1&sensor_enabled[15]=1&sensor_enabled[29]=1&sensor_enabled[4096]=0&sensor_enabled[4112]=0&sensor_enabled[4113]=0&sensor_enabled[4114]=0&sensor_enabled[4115]=0&sensor_enabled[4116]=0&sensor_enabled[4128]=0&sensor_enabled[8192]=0&sensor_enabled[8193]=0&sensor_enabled[8194]=0&sensor_enabled[8195]=0&sensor_polling_interval[2]=86400&sensor_polling_interval[7]=3600&sensor_polling_interval[8]=3600&sensor_polling_interval[10]=18000&sensor_polling_interval[15]=3600&sensor_polling_interval[29]=3600")
+	// create sensor configuration
+	sensors := sensors.GetSensors()
+	var configStrings []string
+	configStrings = append(configStrings,  fmt.Sprintf("current_time=%d", time.Now().Unix()))
+	configStrings = append(configStrings,  "transmit_interval=55202", "transmit_app_led=1", "sensor_app_led=0", "day_threshold=10.0")
+	for key, sensor := range sensors {
+		configStrings = append(configStrings, fmt.Sprintf("sensor_enabled[%d]=%d", key, bool2int(sensor.Enabled)))
+		if sensor.PollingInterval > 0 {
+			configStrings = append(configStrings, fmt.Sprintf("sensor_polling_interval[%d]=%d", key, sensor.PollingInterval))
+		}
+	}
+
+	response := []byte(strings.Join(configStrings[:], "&"))
 	responseEncoded := crypto.Encrypt(key, []byte(response))
 
 	c.Data(http.StatusOK, ContentType, responseEncoded)
@@ -139,4 +151,11 @@ func writeCSVln(record []string, path string) {
 	csvWriter := csv.NewWriter(file)
 	_ = csvWriter.Write(record) // ignore errors for now
 	csvWriter.Flush()
+}
+
+func bool2int(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }

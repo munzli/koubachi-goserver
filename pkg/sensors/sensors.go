@@ -114,6 +114,76 @@ func GetSensors() map[int]Sensors {
 		ConversionFunc:  convertTsl2561Light,
 	}
 
+	// statistics
+	sensors[4096] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+	sensors[4112] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+	sensors[4113] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+	sensors[4114] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+	sensors[4115] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+	sensors[4116] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+	sensors[4128] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+
+	// errors
+	sensors[8192] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+	sensors[8193] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+	sensors[8194] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+	sensors[8195] = Sensors{
+		Type:            "",
+		Enabled:         false,
+		PollingInterval: 0,
+		ConversionFunc:  nil,
+	}
+
 	return sensors
 }
 
