@@ -21,13 +21,14 @@ type Data struct {
 }
 
 type Reading struct {
-	Timestamp int
-	Code      int
-	Value     float64
+	Timestamp      int
+	Code           int
+	ConvertedValue float64
+	RawValue       float64
 }
 
 func (r *Reading) UnmarshalJSON(buf []byte) error {
-	tmp := []interface{}{&r.Timestamp, &r.Code, &r.Value}
+	tmp := []interface{}{&r.Timestamp, &r.Code, &r.RawValue}
 	wantLen := len(tmp)
 	if err := json.Unmarshal(buf, &tmp); err != nil {
 		return err
@@ -64,19 +65,19 @@ func GetSensors() map[int]Sensors {
 	sensors[7] = Sensors{
 		Type:            "temperature",
 		Enabled:         true,
-		PollingInterval: 3600,
+		PollingInterval: 1800,
 		ConversionFunc:  convertLm94022Temperature,
 	}
 	sensors[8] = Sensors{
 		Type:            "light",
 		Enabled:         true,
-		PollingInterval: 3600,
+		PollingInterval: 1800,
 		ConversionFunc:  convertSfh3710Light,
 	}
 	sensors[9] = Sensors{
 		Type:            "rssi",
 		Enabled:         true,
-		PollingInterval: 0,
+		PollingInterval: 1800,
 		ConversionFunc:  nil,
 	}
 	sensors[10] = Sensors{
@@ -88,7 +89,7 @@ func GetSensors() map[int]Sensors {
 	sensors[11] = Sensors{
 		Type:            "soil_temperature",
 		Enabled:         true,
-		PollingInterval: 18000,
+		PollingInterval: 3600,
 		ConversionFunc:  func(x float64, config config.CalibrationParameters) float64 {
 			return x - 2.5
 		},
@@ -96,13 +97,13 @@ func GetSensors() map[int]Sensors {
 	sensors[12] = Sensors{
 		Type:            "soil_moisture",
 		Enabled:         true,
-		PollingInterval: 0,
+		PollingInterval: 3600,
 		ConversionFunc:  convertSoilMoisture,
 	}
 	sensors[15] = Sensors{
 		Type:            "temperature",
 		Enabled:         true,
-		PollingInterval: 0,
+		PollingInterval: 1800,
 		ConversionFunc:  func(x float64, config config.CalibrationParameters) float64 {
 			return -46.85 + 175.72 * x / math.Pow(2,16)
 		},
@@ -110,7 +111,7 @@ func GetSensors() map[int]Sensors {
 	sensors[29] = Sensors{
 		Type:            "light",
 		Enabled:         true,
-		PollingInterval: 0,
+		PollingInterval: 1800,
 		ConversionFunc:  convertTsl2561Light,
 	}
 
