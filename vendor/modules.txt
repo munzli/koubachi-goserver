@@ -13,6 +13,8 @@ github.com/golang/protobuf/proto
 github.com/json-iterator/go
 # github.com/mattn/go-isatty v0.0.7
 github.com/mattn/go-isatty
+# github.com/mattn/go-sqlite3 v1.14.3
+github.com/mattn/go-sqlite3
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1

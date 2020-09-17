@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -9,9 +8,9 @@ import (
 	"koubachi-goserver/pkg/config"
 	"koubachi-goserver/pkg/crypto"
 	"koubachi-goserver/pkg/sensors"
+	"koubachi-goserver/pkg/sqlite"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -20,11 +19,13 @@ const ContentType = "application/x-koubachi-aes-encrypted"
 
 type API struct {
 	Config *config.Config
+	Sqlite *sqlite.Database
 }
 
-func NewAPI(config *config.Config) *API {
+func New(config *config.Config) *API {
 	return &API{
 		Config: config,
+		Sqlite: sqlite.New(config.Output.DbFile),
 	}
 }
 
@@ -53,6 +54,7 @@ func (api *API) connect(c *gin.Context) {
 	body := crypto.Decrypt(key, rawData)
 
 	// do nothing with body
+	// persist.WriteSensor(macAddress, api.Config.Devices[macAddress])
 	_ = body
 
 	response := fmt.Sprintf("current_time=%d&last_config_change=%d", time.Now().Unix(), api.Config.LastConfigChange.Unix())
@@ -112,45 +114,22 @@ func (api *API) readings(c *gin.Context) {
 
 	sensors := sensors.GetSensors()
 	for _, reading  := range data.Readings {
-		// map special sensor data
+		// map special sensor persist
 		mapper := sensors[reading.Code]
 
 		// special conversion of value
-		value := reading.Value
+		reading.ConvertedValue = reading.RawValue
 		if mapper.ConversionFunc != nil {
-			value = mapper.ConversionFunc(reading.Value, api.Config.Devices[macAddress].CalibrationParameters)
+			reading.ConvertedValue = mapper.ConversionFunc(reading.RawValue, api.Config.Devices[macAddress].CalibrationParameters)
 		}
 
-		// prepare for csv
-		path := fmt.Sprintf("%s/%s_%s.csv", api.Config.Output.Directory, macAddress, mapper.Type)
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			writeCSVln([]string{"timestamp",mapper.Type,"raw_value"}, path)
-		}
-		record := []string{
-			fmt.Sprintf("%d", reading.Timestamp),
-			fmt.Sprintf("%f", value),
-			fmt.Sprintf("%f", reading.Value),
-		}
-		writeCSVln(record, path)
+		api.Sqlite.WriteReading(macAddress, mapper.Type, reading, api.Config.Devices[macAddress])
 	}
 
 	response := fmt.Sprintf("current_time=%d&last_config_change=%d", time.Now().Unix(), api.Config.LastConfigChange.Unix())
 	responseEncoded := crypto.Encrypt(key, []byte(response))
 
 	c.Data(http.StatusCreated, ContentType, responseEncoded)
-}
-
-func writeCSVln(record []string, path string) {
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	defer file.Close()
-
-	if err != nil {
-		log.Panicf("error: %v", err)
-	}
-
-	csvWriter := csv.NewWriter(file)
-	_ = csvWriter.Write(record) // ignore errors for now
-	csvWriter.Flush()
 }
 
 func bool2int(b bool) int {

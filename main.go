@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	configuration := config.Init()
+	configuration := config.New()
 	configuration.LastConfigChange = time.Now()
 
 	router := gin.Default()
@@ -20,7 +20,7 @@ func main() {
 		AllowAllOrigins: true,
 	}))
 
-	a := api.NewAPI(configuration)
+	a := api.New(configuration)
 
 	apiRouting := router.Group("/")
 	a.AttachRoutes(apiRouting)

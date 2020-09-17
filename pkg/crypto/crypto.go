@@ -46,7 +46,7 @@ func Encrypt(key, plaintext []byte) []byte {
 	}
 
 	// The IV needs to be unique, but not secure. Therefore it's common to
-	// include it at the beginning of the data.
+	// include it at the beginning of the persist.
 	data := make([]byte, aes.BlockSize+len(plaintext))
 	iv := data[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
@@ -68,14 +68,14 @@ func Decrypt(key, data []byte) []byte {
 	// The IV needs to be unique, but not secure. Therefore it's common to
 	// include it at the beginning of the ciphertext.
 	if len(data) < aes.BlockSize {
-		log.Panic("error: data too short")
+		log.Panic("error: persist too short")
 	}
 	iv := data[:aes.BlockSize]
 	data = data[aes.BlockSize:]
 
 	// CBC mode always works in whole blocks.
 	if len(data)%aes.BlockSize != 0 {
-		log.Panic("data is not a multiple of the block size")
+		log.Panic("persist is not a multiple of the block size")
 	}
 
 	mode := cipher.NewCBCDecrypter(block, iv)

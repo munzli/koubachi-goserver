@@ -18,12 +18,13 @@ type CalibrationParameters struct {
 }
 
 type Output struct {
-	Type      string `yaml:"type"`
-	Directory string `yaml:"directory"`
+	DbFile string `yaml:"db_file"`
 }
 
 type devices map[string]Device
+
 type Device struct {
+	Name                  string                `yaml:"name"`
 	Key                   string                `yaml:"key"`
 	CalibrationParameters CalibrationParameters `yaml:"calibration_parameters"`
 }
@@ -34,7 +35,7 @@ type Config struct {
 	Devices devices `yaml:"devices"`
 }
 
-func Init() *Config {
+func New() *Config {
 	config := Config{}
 
 	yml, err := ioutil.ReadFile("config/config.yml")

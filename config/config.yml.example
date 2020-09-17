@@ -1,8 +1,8 @@
 output:
-  type: csv_files
-  directory: "readings"
+  db_file: "./readings/koubachi.db"
 devices:
   001122334455:
+    name: "pot"
     key: 00112233445566778899aabbccddeeff
     calibration_parameters:
       LM94022_TEMPERATURE_OFFSET: 0.0
