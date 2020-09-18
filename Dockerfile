@@ -1,6 +1,7 @@
 # builder
 FROM golang:1.13-alpine as builder
 
+RUN apk add --update-cache gcc libc-dev
 WORKDIR /app
 COPY . .
 RUN go build -o koubachi-goserver .
