@@ -23,9 +23,9 @@ create table readings
 (
     id             INTEGER
         constraint readings_pk
-            primary key autoincrement
+            primary key autoincrement,
+    sensor         INTEGER not null
         references sensors,
-    sensor         INTEGER not null,
     rawvalue       REAL,
     convertedvalue REAL,
     timestamp      INTEGER not null,

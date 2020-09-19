@@ -5,17 +5,38 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"koubachi-goserver/pkg/config"
 	"koubachi-goserver/pkg/sensors"
+	"time"
 )
 
 type Database struct {
 	Client *sql.DB
 }
 
+type Sensor struct {
+	Id         int64
+	MacAddress string
+	Name       string
+}
+
+type Type struct {
+	Id   int64
+	Name string
+}
+
+type Reading struct {
+	Id             int64
+	SensorId       int64
+	RawValue       float64
+	ConvertedValue float64
+	Timestamp      int64
+	TypeId         int64
+}
+
 func New(file string) *Database {
 	db, _ := sql.Open("sqlite3", file)
 
 	// create database structure if needed
-	readings, _ := db.Prepare("create table if not exists readings ( id INTEGER constraint readings_pk primary key autoincrement references sensors, sensor INTEGER not null, rawvalue REAL, convertedvalue REAL, timestamp INTEGER not null, type INTEGER not null references types );")
+	readings, _ := db.Prepare("create table if not exists readings ( id INTEGER constraint readings_pk primary key autoincrement, sensor INTEGER not null references sensors, rawvalue REAL, convertedvalue REAL, timestamp INTEGER not null, type INTEGER not null references types);")
 	readings.Exec()
 
 	sensors, _ := db.Prepare("create table if not exists sensors ( id INTEGER constraint sensors_pk primary key autoincrement, macaddress TEXT, name TEXT ); create unique index if not exists sensors_macaddress_uindex on sensors (macaddress);")
@@ -29,7 +50,7 @@ func New(file string) *Database {
 	}
 }
 
-func (db *Database) getSensor(macAddress string, device config.Device) int64 {
+func (db *Database) getSensorId(macAddress string, device config.Device) int64 {
 	row := db.Client.QueryRow("select id from sensors where macaddress = $1", macAddress)
 	id := new(int64)
 	err := row.Scan(id)
@@ -42,7 +63,7 @@ func (db *Database) getSensor(macAddress string, device config.Device) int64 {
 	return *id
 }
 
-func (db *Database) getType(readingType string) int64 {
+func (db *Database) getTypeId(readingType string) int64 {
 	row := db.Client.QueryRow("select id from types where name = $1", readingType)
 	id := new(int64)
 	err := row.Scan(id)
@@ -56,9 +77,28 @@ func (db *Database) getType(readingType string) int64 {
 }
 
 func (db *Database) WriteReading(macAddress, readingType string, reading *sensors.Reading, device config.Device) {
-	sensorId := db.getSensor(macAddress, device)
-	typeId := db.getType(readingType)
+	sensorId := db.getSensorId(macAddress, device)
+	typeId := db.getTypeId(readingType)
 
 	statement, _ := db.Client.Prepare("insert into readings (sensor, rawvalue, convertedvalue, timestamp, type) values (?, ?, ?, ?, ?)")
+	defer statement.Close()
+
 	statement.Exec(sensorId, reading.RawValue, reading.ConvertedValue, reading.Timestamp, typeId)
+}
+
+func (db *Database) GetReadings(days int) []*Reading {
+	timestamp := time.Now().AddDate(0, 0, -days)
+	rows, _ := db.Client.Query("select * from readings where timestamp > $1", timestamp.Unix())
+	defer rows.Close()
+
+	readings := make([]*Reading, 0)
+	for rows.Next() {
+		reading := new(Reading)
+		err := rows.Scan(&reading.Id, &reading.SensorId, &reading.RawValue, &reading.ConvertedValue, &reading.Timestamp, &reading.TypeId)
+		if err == sql.ErrNoRows {
+			return readings
+		}
+		readings = append(readings, reading)
+	}
+	return readings
 }
