@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"koubachi-goserver/pkg/config"
+	"koubachi-goserver/pkg/model"
 )
 
 type Sensors struct {
@@ -43,19 +44,19 @@ func GetSensors() map[int]Sensors {
 	sensors := map[int]Sensors{}
 
 	sensors[1] = Sensors{
-		Type:            "board_temperature",
+		Type:            model.BoardTemperature,
 		Enabled:         false,
 		PollingInterval: 3600,
 		ConversionFunc:  nil,
 	}
 	sensors[2] = Sensors{
-		Type:            "battery_voltage",
+		Type:            model.BatteryVoltage,
 		Enabled:         true,
 		PollingInterval: 86400,
 		ConversionFunc:  nil,
 	}
 	sensors[6] = Sensors{
-		Type:            "button",
+		Type:            model.Button,
 		Enabled:         true,
 		PollingInterval: 0,
 		ConversionFunc:  func(x float64, config config.CalibrationParameters) float64 {
@@ -63,55 +64,55 @@ func GetSensors() map[int]Sensors {
 		},
 	}
 	sensors[7] = Sensors{
-		Type:            "temperature",
+		Type:            model.Temperature,
 		Enabled:         true,
-		PollingInterval: 1800,
+		PollingInterval: 3600,
 		ConversionFunc:  convertLm94022Temperature,
 	}
 	sensors[8] = Sensors{
-		Type:            "light",
+		Type:            model.Light,
 		Enabled:         true,
-		PollingInterval: 1800,
+		PollingInterval: 3600,
 		ConversionFunc:  convertSfh3710Light,
 	}
 	sensors[9] = Sensors{
-		Type:            "rssi",
+		Type:            model.Rssi,
 		Enabled:         true,
-		PollingInterval: 1800,
+		PollingInterval: 0,
 		ConversionFunc:  nil,
 	}
 	sensors[10] = Sensors{
-		Type:            "soil_sensors_trigger",
+		Type:            model.SoilSensorsTrigger,
 		Enabled:         true,
 		PollingInterval: 18000,
 		ConversionFunc:  nil,
 	}
 	sensors[11] = Sensors{
-		Type:            "soil_temperature",
+		Type:            model.SoilTemperature,
 		Enabled:         true,
-		PollingInterval: 3600,
+		PollingInterval: 7200,
 		ConversionFunc:  func(x float64, config config.CalibrationParameters) float64 {
 			return x - 2.5
 		},
 	}
 	sensors[12] = Sensors{
-		Type:            "soil_moisture",
+		Type:            model.SoilMoisture,
 		Enabled:         true,
 		PollingInterval: 3600,
 		ConversionFunc:  convertSoilMoisture,
 	}
 	sensors[15] = Sensors{
-		Type:            "temperature",
+		Type:            model.Temperature,
 		Enabled:         true,
-		PollingInterval: 1800,
+		PollingInterval: 3600,
 		ConversionFunc:  func(x float64, config config.CalibrationParameters) float64 {
 			return -46.85 + 175.72 * x / math.Pow(2,16)
 		},
 	}
 	sensors[29] = Sensors{
-		Type:            "light",
+		Type:            model.Light,
 		Enabled:         true,
-		PollingInterval: 1800,
+		PollingInterval: 3600,
 		ConversionFunc:  convertTsl2561Light,
 	}
 

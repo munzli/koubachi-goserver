@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"koubachi-goserver/pkg/config"
 	"koubachi-goserver/pkg/crypto"
+	"koubachi-goserver/pkg/model"
 	"koubachi-goserver/pkg/sensors"
 	"koubachi-goserver/pkg/sqlite"
 	"log"
@@ -34,9 +35,11 @@ func (api *API) AttachRoutes(r *gin.RouterGroup) {
 	{
 		device := a.Group("/smart_devices")
 		{
+			device.GET("", api.getDevices)
 			device.PUT("/:macAddress", api.connect)
 			device.POST("/:macAddress/config", api.config)
-			device.POST("/:macAddress/readings", api.readings)
+			device.POST("/:macAddress/readings", api.postReadings)
+			device.GET("/:macAddress/soil_moisture", api.getSoilMoisture)
 		}
 	}
 }
@@ -82,7 +85,7 @@ func (api *API) config(c *gin.Context) {
 	sensors := sensors.GetSensors()
 	var configStrings []string
 	configStrings = append(configStrings,  fmt.Sprintf("current_time=%d", time.Now().Unix()))
-	configStrings = append(configStrings,  "transmit_interval=55202", "transmit_app_led=1", "sensor_app_led=0", "day_threshold=10.0")
+	configStrings = append(configStrings,  "transmit_interval=14400", "transmit_app_led=1", "sensor_app_led=0", "day_threshold=10.0")
 	for key, sensor := range sensors {
 		configStrings = append(configStrings, fmt.Sprintf("sensor_enabled[%d]=%d", key, bool2int(sensor.Enabled)))
 		if sensor.PollingInterval > 0 {
@@ -91,12 +94,12 @@ func (api *API) config(c *gin.Context) {
 	}
 
 	response := []byte(strings.Join(configStrings[:], "&"))
-	responseEncoded := crypto.Encrypt(key, []byte(response))
+	responseEncoded := crypto.Encrypt(key, response)
 
 	c.Data(http.StatusOK, ContentType, responseEncoded)
 }
 
-func (api *API) readings(c *gin.Context) {
+func (api *API) postReadings(c *gin.Context) {
 	macAddress := c.Param("macAddress")
 	deviceKey := api.Config.Devices[macAddress].Key
 
@@ -130,6 +133,43 @@ func (api *API) readings(c *gin.Context) {
 	responseEncoded := crypto.Encrypt(key, []byte(response))
 
 	c.Data(http.StatusCreated, ContentType, responseEncoded)
+}
+
+func (api *API) getSoilMoisture(c *gin.Context) {
+	macAddress := c.Param("macAddress")
+
+	sensorId := api.Sqlite.GetSensorId(model.SoilMoisture)
+	deviceId := api.Sqlite.GetDeviceId(macAddress, api.Config.Devices[macAddress])
+
+	readings := api.Sqlite.GetReadings(deviceId, sensorId, 14)
+
+	data := make([]model.ChartData, 0)
+	for _, reading  := range readings {
+		chartData := model.ChartData{
+			T: time.Unix(reading.Timestamp, 0),
+			Y: reading.ConvertedValue,
+		}
+		data = append(data, chartData)
+	}
+
+	c.JSON(http.StatusOK, data)
+}
+
+func (api *API) getDevices(c *gin.Context) {
+
+	devices := api.Sqlite.GetDevices()
+
+	data := make([]model.Device, 0)
+	for _, device  := range devices {
+		deviceData := model.Device{
+			Id: device.Id,
+			MacAddress: device.MacAddress,
+			Name: device.Name,
+		}
+		data = append(data, deviceData)
+	}
+
+	c.JSON(http.StatusOK, data)
 }
 
 func bool2int(b bool) int {
