@@ -15,6 +15,7 @@ ARG GID=1000
 WORKDIR /app
 RUN apk add --update --no-cache ca-certificates dumb-init
 COPY --from=builder /app/koubachi-goserver .
+COPY ./assets ./assets
 
 # setup environment
 ENV PATH "/app:${PATH}"
