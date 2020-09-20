@@ -21,3 +21,8 @@ type Reading struct {
 	Timestamp      time.Time `json:"timestamp"`
 	Type           Type      `json:"type"`
 }
+
+type ChartData struct {
+	T time.Time `json:"t"`
+	Y float64   `json:"y"`
+}
