@@ -39,7 +39,13 @@ func (api *API) AttachRoutes(r *gin.RouterGroup) {
 			device.PUT("/:macAddress", api.connect)
 			device.POST("/:macAddress/config", api.config)
 			device.POST("/:macAddress/readings", api.postReadings)
-			device.GET("/:macAddress/soil_moisture", api.getSoilMoisture)
+
+			device.GET("/:macAddress/soil_moisture", api.getReadings(model.SoilMoisture))
+			device.GET("/:macAddress/battery_voltage", api.getReadings(model.BatteryVoltage))
+			device.GET("/:macAddress/soil_temperature", api.getReadings(model.SoilTemperature))
+			device.GET("/:macAddress/temperature", api.getReadings(model.Temperature))
+			device.GET("/:macAddress/light", api.getReadings(model.Light))
+			device.GET("/:macAddress/rssi", api.getReadings(model.Rssi))
 		}
 	}
 }
@@ -82,11 +88,11 @@ func (api *API) config(c *gin.Context) {
 	_ = body
 
 	// create sensor configuration
-	sensors := sensors.GetSensors()
+	sensorData := sensors.GetSensors()
 	var configStrings []string
 	configStrings = append(configStrings,  fmt.Sprintf("current_time=%d", time.Now().Unix()))
 	configStrings = append(configStrings,  "transmit_interval=14400", "transmit_app_led=1", "sensor_app_led=0", "day_threshold=10.0")
-	for key, sensor := range sensors {
+	for key, sensor := range sensorData {
 		configStrings = append(configStrings, fmt.Sprintf("sensor_enabled[%d]=%d", key, bool2int(sensor.Enabled)))
 		if sensor.PollingInterval > 0 {
 			configStrings = append(configStrings, fmt.Sprintf("sensor_polling_interval[%d]=%d", key, sensor.PollingInterval))
@@ -113,12 +119,12 @@ func (api *API) postReadings(c *gin.Context) {
 
 	// do something with body
 	data := sensors.Data{}
-	json.Unmarshal(body, &data)
+	_ = json.Unmarshal(body, &data)
 
-	sensors := sensors.GetSensors()
+	sensorData := sensors.GetSensors()
 	for _, reading  := range data.Readings {
 		// map special sensor persist
-		mapper := sensors[reading.Code]
+		mapper := sensorData[reading.Code]
 
 		// special conversion of value
 		reading.ConvertedValue = reading.RawValue
@@ -135,24 +141,27 @@ func (api *API) postReadings(c *gin.Context) {
 	c.Data(http.StatusCreated, ContentType, responseEncoded)
 }
 
-func (api *API) getSoilMoisture(c *gin.Context) {
-	macAddress := c.Param("macAddress")
+func (api *API) getReadings(sensor string) gin.HandlerFunc {
+	fn := func(c *gin.Context) {
+		macAddress := c.Param("macAddress")
 
-	sensorId := api.Sqlite.GetSensorId(model.SoilMoisture)
-	deviceId := api.Sqlite.GetDeviceId(macAddress, api.Config.Devices[macAddress])
+		// get necessary ids to query database
+		sensorId := api.Sqlite.GetSensorId(sensor)
+		deviceId := api.Sqlite.GetDeviceId(macAddress, api.Config.Devices[macAddress])
+		readings := api.Sqlite.GetReadings(deviceId, sensorId, 14)
 
-	readings := api.Sqlite.GetReadings(deviceId, sensorId, 14)
-
-	data := make([]model.ChartData, 0)
-	for _, reading  := range readings {
-		chartData := model.ChartData{
-			T: time.Unix(reading.Timestamp, 0),
-			Y: reading.ConvertedValue,
+		data := make([]model.ChartData, 0)
+		for _, reading  := range readings {
+			chartData := model.ChartData{
+				T: time.Unix(reading.Timestamp, 0),
+				Y: reading.ConvertedValue,
+			}
+			data = append(data, chartData)
 		}
-		data = append(data, chartData)
-	}
 
-	c.JSON(http.StatusOK, data)
+		c.JSON(http.StatusOK, data)
+	}
+	return fn
 }
 
 func (api *API) getDevices(c *gin.Context) {
