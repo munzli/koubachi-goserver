@@ -31,6 +31,13 @@ func New(config *config.Config) *API {
 }
 
 func (api *API) AttachRoutes(r *gin.RouterGroup) {
+
+	// index
+	r.StaticFile("", "./assets/index.html")
+	r.StaticFile("/favicon.ico", "./assets/favicon.ico")
+	r.Static("/js", "./assets/js")
+
+	// api
 	a := r.Group("/v1")
 	{
 		device := a.Group("/smart_devices")
