@@ -13,8 +13,8 @@ func main() {
 	configuration := config.New()
 	configuration.LastConfigChange = time.Now()
 
-	router := gin.Default()
-	router.Use(cors.New(cors.Config{
+	router := gin.New()
+	router.Use(gin.Logger(), gin.Recovery(), cors.New(cors.Config{
 		AllowMethods:    []string{"GET", "POST", "PUT", "HEAD", "DELETE", "PUT"},
 		AllowHeaders:    []string{"Authorization", "Origin", "Content-Length", "Content-Type"},
 		AllowAllOrigins: true,
