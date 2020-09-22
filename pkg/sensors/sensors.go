@@ -78,13 +78,13 @@ func GetSensors() map[int]Sensors {
 	sensors[9] = Sensors{
 		Type:            model.Rssi,
 		Enabled:         true,
-		PollingInterval: 0,
+		PollingInterval: 14400,
 		ConversionFunc:  nil,
 	}
 	sensors[10] = Sensors{
 		Type:            model.SoilSensorsTrigger,
 		Enabled:         true,
-		PollingInterval: 18000,
+		PollingInterval: 7200,
 		ConversionFunc:  nil,
 	}
 	sensors[11] = Sensors{
