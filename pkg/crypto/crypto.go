@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/hex"
+
 	"hash/crc32"
 	"io"
 	"log"
@@ -14,16 +15,15 @@ import (
 
 func padding(src []byte) []byte {
 	padding := aes.BlockSize - (len(src) + crc32.Size) % aes.BlockSize
-	padText := bytes.Repeat([]byte{byte(padding)}, padding)
+	padText := bytes.Repeat([]byte{0}, padding)
 	return append(src, padText...)
 }
 
 func unpadding(src []byte) []byte {
-	return bytes.TrimRight(src, "\x00")
+	return bytes.TrimRight(src, string([]byte{0}))
 }
 
 func createCrc(data []byte) []byte {
-	// TODO simplify and handle error
 	crc, _ := hex.DecodeString(strconv.FormatUint(uint64(crc32.ChecksumIEEE(data)), 16))
 	return crc
 }
