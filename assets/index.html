@@ -49,11 +49,8 @@
 				responsive: true,
 				tooltips: {
 					mode: 'index',
-					intersect: false,
-				},
-				hover: {
-					mode: 'nearest',
-					intersect: true
+					axis: 'x',
+					intersect: false
 				},
 				scales: {
 					xAxes: [{
@@ -121,6 +118,10 @@
 								borderColor: colors[k],
 								backgroundColor: colors[k],
 								data: data,
+								//pointStyle: "line",
+								//rotation: 90,
+								radius: 2,
+								hoverRadius: 3,
 								fill: false,
 							});
 							chart.update();
