@@ -88,13 +88,13 @@ func (db *Database) WriteReading(macAddress, sensor string, reading *sensors.Rea
 
 func (db *Database) GetReadings(deviceId, sensorId int64, days int) []*Reading {
 	timestamp := time.Now().AddDate(0, 0, -days)
-	rows, _ := db.Client.Query("select * from readings where timestamp > $1 and device = $2 and sensor = $3", timestamp.Unix(), deviceId, sensorId)
+	rows, _ := db.Client.Query("select distinct device, rawvalue, convertedvalue, timestamp, sensor from readings where timestamp > $1 and device = $2 and sensor = $3", timestamp.Unix(), deviceId, sensorId)
 	defer rows.Close()
 
 	readings := make([]*Reading, 0)
 	for rows.Next() {
 		reading := new(Reading)
-		err := rows.Scan(&reading.Id, &reading.DeviceId, &reading.RawValue, &reading.ConvertedValue, &reading.Timestamp, &reading.SensorId)
+		err := rows.Scan(&reading.DeviceId, &reading.RawValue, &reading.ConvertedValue, &reading.Timestamp, &reading.SensorId)
 		if err == sql.ErrNoRows {
 			return readings
 		}
