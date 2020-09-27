@@ -1,22 +1,34 @@
 # koubachi-goserver
 this is a self hosted server for koubachi plant sensors.
-it saves the readings into a local sqlite database.
+it saves the readings into a local sqlite database and displays them in a series of [charts](https://www.chartjs.org/).
+
+![index sample](assets/img/index.png)
 
 inspired by https://github.com/koalatux/koubachi-pyserver
 
-### change koubachi server address
-create a config file (see `config/config.yml.example`)
+### koubachi server address
 
 change koubachi endpoint and wi-fi access (see https://github.com/koubachi-sensor/api-docs#change-the-sensors-server-address)
+
+set enpoint using curl
 ```
 curl -X GET -G http://172.29.0.1/sos_config -d host=192.168.1.120 -d port=8005
 ```
 ### run
-as a container just build and run using
+create a config file (see `config/config.yml.example`)
+
+just build and run as a container using
 ```
 docker build -t koubachi-goserver .
 docker run -v $(pwd)/config:/app/config:ro -v $(pwd)/readings:/app/readings -p 8005:8005 koubachi-goserver
 ```
+to build with [gin](https://github.com/gin-gonic/gin) in debug mode use
+```
+docker build --build-arg gin_mode=debug -t koubachi-goserver .
+```
+
+### display charts
+just call address in your browser (i.E. http://localhost:8005/)
 
 ### sqlite tables
 ```
