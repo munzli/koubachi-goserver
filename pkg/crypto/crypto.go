@@ -5,12 +5,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/hex"
-
+	"encoding/binary"
 	"hash/crc32"
 	"io"
 	"log"
-	"strconv"
 )
 
 func padding(src []byte) []byte {
@@ -24,7 +22,8 @@ func unpadding(src []byte) []byte {
 }
 
 func createCrc(data []byte) []byte {
-	crc, _ := hex.DecodeString(strconv.FormatUint(uint64(crc32.ChecksumIEEE(data)), 16))
+	crc := make([]byte, 4)
+	binary.BigEndian.PutUint32(crc, crc32.ChecksumIEEE(data))
 	return crc
 }
 
