@@ -22,7 +22,7 @@ func unpadding(src []byte) []byte {
 }
 
 func createCrc(data []byte) []byte {
-	crc := make([]byte, 4)
+	crc := make([]byte, crc32.Size)
 	binary.BigEndian.PutUint32(crc, crc32.ChecksumIEEE(data))
 	return crc
 }
